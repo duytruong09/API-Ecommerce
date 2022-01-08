@@ -1,7 +1,7 @@
 const router = require('express').Router();
 
 const User = require('../models/User');
-const { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmmin } = require('./verifyToken');
+const { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin } = require('./verifyToken');
 
 //UPDATE
 router.put('/:id', verifyTokenAndAuthorization, async (req, res)=>{
@@ -27,7 +27,7 @@ router.put('/:id', verifyTokenAndAuthorization, async (req, res)=>{
 })
 
 //DELETE
-router.delete('/:id', verifyTokenAndAuthorization, async (req, res) => {
+router.delete('/:id', verifyTokenAndAdmin, async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id)
         res.status(200).json("User has been delete...")
@@ -37,7 +37,7 @@ router.delete('/:id', verifyTokenAndAuthorization, async (req, res) => {
 })
 
 //GET USER
-router.get('/find/:id', verifyTokenAndAdmmin, async (req, res) => {
+router.get('/find/:id', verifyTokenAndAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
         const { password, ...other } = user._doc;
@@ -48,7 +48,7 @@ router.get('/find/:id', verifyTokenAndAdmmin, async (req, res) => {
 })
 
 //GET ALL USER
-router.get('/', verifyTokenAndAdmmin, async (req, res) => {
+router.get('/', verifyTokenAndAdmin, async (req, res) => {
     const query = req.query.new
     try {
         const users = query 
@@ -61,16 +61,16 @@ router.get('/', verifyTokenAndAdmmin, async (req, res) => {
 })
 
 //GET USER STATS
-router.get('/stats', verifyTokenAndAdmmin, async (req, res) => {
+router.get('/stats', verifyTokenAndAdmin, async (req, res) => {
     const date = new Date();
     const lastYear = new Date(date.setFullYear(date.setFullYear() - 1));
 
     try {
         const data = await User.aggregate([
-            { $math: { createAt: { $gte: lastYear } } },
+            { $match: { createdAt: { $gte: lastYear } } },
             {
                 $project: {
-                    month: { $month: "$createAt" },
+                    month: { $month: "$createdAt" },
                 },
             },
             {
